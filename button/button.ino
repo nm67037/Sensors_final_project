@@ -1,30 +1,36 @@
-//this code was taken from the Adafruit website
+//this code was sourced from the Adafruit website
 
 int fsrAnalogPin = 5; 
-int fsrReading; 
-int threshold = 600;
-bool state = false;
-bool running = false;
+int fsrReading;       
+int threshold = 600;  
+bool state = false;   
+bool running = false; 
 
-void setup(void) {
-  Serial.begin(115000);   
+void setup() {
+  Serial.begin(115200);
 }
- 
-void loop(void) {
-  while (!running) {
-  fsrReading = analogRead(fsrAnalogPin);
-  Serial.print("Analog reading = ");
-  Serial.println(fsrReading);
 
-   // Check if FSR is pressed
-  if (fsrReading >= threshold) {
-    state = true; // FSR is pressed
-    Serial.println("State: ON");
-  } else {
-    state = false; // FSR is not pressed
-    Serial.println("State: OFF");
-  }  
-  delay(500);
+void loop() {
+  // Polling algorithm to check FSR state
+  while (!running) { // Keep polling until "running" is true
+    fsrReading = analogRead(fsrAnalogPin);
+
+    if (fsrReading >= threshold) {
+      state = true;
+      running = true; 
+      Serial.println("FSR pressed. Running = true");
+    } else {
+      state = false;
+      Serial.println("FSR not pressed. Polling...");
+    }
+
+    delay(500); // Short delay for stability
   }
-  delay(1000);
+
+  // Code that runs once "running" is true
+  if (running) {
+    Serial.println("Running part of the code...");
+    // Add your additional code here
+    delay(1000); // Simulate processing time
+  }
 }
