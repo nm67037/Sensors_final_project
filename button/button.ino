@@ -7,9 +7,11 @@ const int echo_pin = 6;
 float timing = 0.0;
 float distance = 0.0;
 
+//Hall:
+#define Hall_Sensor_Pin 10
 
 int fsrAnalogPin = 5; 
-int Hall_Sensor_Pin = 10;
+//int Hall_Sensor_Pin = 10;
 int fsrReading;       
 int threshold = 600;
  
@@ -21,6 +23,7 @@ void setup() {
   pinMode(Hall_Sensor_Pin, INPUT);
   pinMode(echo_pin, INPUT);
   pinMode(trig_pin, OUTPUT);
+  pinMode(Hall_Sensor_Pin,INPUT);
   digitalWrite(trig_pin, LOW);
   Serial.begin(115200);
 }
@@ -46,8 +49,23 @@ void loop() {
   if (running) {
     //Serial.println("Running part of the code...");
     
-    float hall_voltage;
-    hall_voltage = analogRead(Hall_Sensor_Pin);
+    float voltage;
+    voltage = analogRead(Hall_Sensor_Pin);
+    voltage = analogRead(Hall_Sensor_Pin);
+    Serial.println(voltage);
+    if (voltage<=3500)
+    {
+      Serial.println("HIGH");
+    }
+    else if (voltage>4500 && voltage<5000)
+    {
+      Serial.println("None");
+    }
+    else 
+    {
+      Serial.println("LOW");
+    }
+    delay(1000);
    // Serial.println(hall_voltage);
 
     digitalWrite(trig_pin, LOW);
