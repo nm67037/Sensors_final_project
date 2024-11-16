@@ -1,13 +1,22 @@
 //the code for the FSR was sourced from the Adafruit website
 //the ultrasonic code was sourced from arduino's website
 
+#include <ESP32Servo.h>
+
+//potentiometer parameters:
+#define potPin 12
+#define motor1Pin 1
+Servo servo1;
+//#define motor2Pin 10
+
+
 //ultrasonic parameters:
 const int trig_pin = 4;
 const int echo_pin = 6;
 float timing = 0.0;
 float distance = 0.0;
 
-//Hall:
+//Hall parameters:
 #define Hall_Sensor_Pin 10
 
 int fsrAnalogPin = 5; 
@@ -17,25 +26,28 @@ int threshold = 600;
  
 bool state = false;   
 bool running = false;
+bool motor_condition = false;
 
 
 void setup() {
+  Serial.begin(115200);
   pinMode(Hall_Sensor_Pin, INPUT);
   pinMode(echo_pin, INPUT);
   pinMode(trig_pin, OUTPUT);
   pinMode(Hall_Sensor_Pin,INPUT);
   digitalWrite(trig_pin, LOW);
-  Serial.begin(115200);
+  servo1.attach(motor1Pin);
 }
 
 void loop() {
   // Polling algorithm to check FSR state
   while (!running) { // Keep polling until "running" is true
     fsrReading = analogRead(fsrAnalogPin);
-
+    //Serial.println(fsrReading);
     if (fsrReading >= threshold) {
       state = true;
-      running = true; 
+      running = true;
+      motor_condition = true; 
       Serial.println("FSR pressed. Running = true");
     } else {
       state = false;
@@ -81,8 +93,16 @@ void loop() {
     Serial.print("Distance: ");
     Serial.print(distance);
     Serial.println("cm | ");
-    
-    delay(750); // Simulate processing time
+
+    if (motor_condition) { 
+      int motor1 = (analogRead(potPin)); //adjust the 2 depending out how pot control looks
+      Serial.print("ADC Motor: ");
+      Serial.println(motor1);
+      int motor1Val= map(motor1, 0, 4095, 0, 180);
+      servo1.write(motor1Val);
+      delay(1);
+    }
+    delay(500); // Simulate processing time
   }
 }
 
