@@ -51,7 +51,7 @@ void setup() {
  
 void loop(){
   pirVal = digitalRead(pirPin);  // read current input value
-
+  Serial.println(pirVal);
   if (pirVal == HIGH) { // movement detected  
     digitalWrite(ledPin, HIGH);  // turn LED on
 

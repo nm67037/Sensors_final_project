@@ -43,7 +43,7 @@ void loop() {
   // Polling algorithm to check FSR state
   while (!running) { // Keep polling until "running" is true
     fsrReading = analogRead(fsrAnalogPin);
-    //Serial.println(fsrReading);
+    Serial.println(fsrReading);
     if (fsrReading >= threshold) {
       state = true;
       running = true;
@@ -63,21 +63,13 @@ void loop() {
     
     float voltage;
     voltage = analogRead(Hall_Sensor_Pin);
-    voltage = analogRead(Hall_Sensor_Pin);
+    //voltage = analogRead(Hall_Sensor_Pin);
     Serial.println(voltage);
-    if (voltage<=3500)
+    if (voltage>=3700)
     {
-      Serial.println("HIGH");
+      Serial.println("Bait is gone!");
     }
-    else if (voltage>4500 && voltage<5000)
-    {
-      Serial.println("None");
-    }
-    else 
-    {
-      Serial.println("LOW");
-    }
-    delay(1000);
+    delay(100);
    // Serial.println(hall_voltage);
 
     digitalWrite(trig_pin, LOW);

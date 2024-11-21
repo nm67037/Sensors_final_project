@@ -18,14 +18,14 @@ void setup() {
 }
 
 void loop() {
-  int adcValue = (analogRead(potPin));
+  int pot_adcValue = (analogRead(potPin));
 
   //predict
   P = P + Q; //use this to calculate Kalman Gain
 
   //update
   K = P / (P + R); //Calculate Kalman Gain
-  x_est = x_est + K * (adcValue - x_est); //Calculate current estimate
+  x_est = x_est + K * (pot_adcValue - x_est); //Calculate current estimate
   P = (1 - K) * P; //calculate the error of the new estimate, and loop
 
   int servoAngle = map(x_est, 100, 8000, 0, 180);
