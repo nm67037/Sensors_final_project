@@ -24,6 +24,15 @@ float Q = 0.05;       // Process noise (tune this)
 float R = 5.0;        // Measurement noise (tune this)
 float K;              // Kalman gain
 
+float y_est = 0.0;  // Initial state estimate (0 = no animal, 1 = animal)
+float J = 1.0;      // Initial uncertainty
+float E = 0.01;     // Process noise (adjust for sensitivity)
+float S = 0.1;      // Measurement noise for PIR
+float K1;           // Kalman gain
+
+const float DISTANCE_THRESHOLD = 50.0;  // Example: animal detected if < 50 cm
+
+
 //pir parameters
 int ledPin = 11;                // pin for the LED
 int pirPin = 3;                // signal pin of the PIR sensor
@@ -38,6 +47,7 @@ const int trig_pin = 4;
 const int echo_pin = 6;
 float timing = 0.0;
 float distance = 0.0;
+float distance1 = 0.0;
 
 //Hall parameters:
 #define Hall_Sensor_Pin 10
@@ -47,9 +57,10 @@ int fsrAnalogPin = 5;
 int fsrReading;       
 int threshold = 600;
  
-//bool state = false;   
-int running = 0;
-//bool motor_condition = false;
+bool state = false;   
+bool running = false;
+bool motor_condition = false;
+
 
 
 void setup() {
@@ -65,30 +76,32 @@ void setup() {
   servo2.attach(motor2Pin);
 }
 
+
 void loop() {
   // Polling algorithm to check FSR state
-  Serial.println(running);
   while (!running) { // Keep polling until "running" is true
     fsrReading = analogRead(fsrAnalogPin);
     Serial.println(fsrReading);
     if (fsrReading >= threshold) {
-      //state = true;
+      state = true;
       running = true;
-      //motor_condition = true; 
+      motor_condition = true; 
       Serial.println("FSR pressed. Running = true");
     } else {
-      //state = false;
+      state = false;
       Serial.println("FSR not pressed. Polling...");
     }
 
-    delay(500); // Short delay for stability
+     // Short delay for stability
   }
 
   // Code that runs once "running" is true
   if (running) {
     //Serial.println("Running part of the code...");
-    
+    fsrReading = analogRead(fsrAnalogPin);
+    //Serial.println(fsrReading);
     float voltage;
+    //float distance1
     voltage = analogRead(Hall_Sensor_Pin);
     //voltage = analogRead(Hall_Sensor_Pin);
    // Serial.println(voltage);
@@ -100,15 +113,15 @@ void loop() {
    // Serial.println(hall_voltage);
     
     digitalWrite(trig_pin, LOW);
-    delay(2);
+    delayMicroseconds(2);
     
     digitalWrite(trig_pin, HIGH);
-    delay(10);
+    delayMicroseconds(10);
     digitalWrite(trig_pin, LOW);
     
     timing = pulseIn(echo_pin, HIGH);
-    distance = (timing * 0.034) / 2;
-    distance = constrain(distance, 0, 300);
+    distance1 = (timing * 0.034) / 2;
+    distance = constrain(distance1, 0, 30);
     
      // Serial.print("Distance: ");
       //Serial.print(distance);
@@ -134,26 +147,38 @@ void loop() {
     servo1.write(servoAngle);
     servo2.write(servoAngle); //I have one pot controlling two motors. THe two sensors move in unison, not independently.
 
-    //Serial.println(x_est);
-    bool animal;
-    pirVal = digitalRead(pirPin);  // read current input value
+
+
+    
+    pirVal = digitalRead(pirPin);
     if (pirVal == HIGH) { // movement detected  
       digitalWrite(ledPin, HIGH); }  // turn LED on
     else { // no movement detected
       digitalWrite(ledPin, LOW);} // turn LED off
-    //Serial.print(distance);
-    //Serial.print('\t');
-    //Serial.println(pirVal); //something wrong with this line
 
-    if (distance < 500) {
-      if (pirVal == HIGH) {
-        animal == HIGH;
-        Serial.println("Animal Detected!");
-        //WRITE ALGORITHM HERE!!!
-      }
+     // Measurement Fusion
+    float measurement = 0.0;
+    if (pirVal == HIGH || distance < DISTANCE_THRESHOLD) {
+      measurement = 1.0;  // Animal detected
     }
-   
-    delay(50); // Simulate processing time
+    // Kalman Filter Update
+    J = J + E;                 // Predict next uncertainty
+    K1 = J / (J + S);          // Calculate Kalman Gain
+    y_est = y_est + K1 * (measurement - y_est);  // Update estimate
+    J = (1 - K1) * J;          // Update uncertainty
+  
+      // Decision Making
+  if (y_est > 0.00000001) {
+    Serial.println("Animal detected!");
+    digitalWrite(ledPin, HIGH);  // Indicate detection
+  } else {
+   // Serial.println("No animal detected.");
+    digitalWrite(ledPin, LOW);   // Indicate no detection
+  }
+   // Serial.print(distance);
+   // Serial.print('\t');
+   // Serial.println(pirVal); //something wrong with this line
+
+    delay(100);
   }
 }
-

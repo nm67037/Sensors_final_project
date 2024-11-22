@@ -47,9 +47,9 @@ int fsrAnalogPin = 5;
 int fsrReading;       
 int threshold = 600;
  
-//bool state = false;   
-int running = 0;
-//bool motor_condition = false;
+bool state = false;   
+bool running = false;
+bool motor_condition = false;
 
 
 void setup() {
@@ -67,17 +67,16 @@ void setup() {
 
 void loop() {
   // Polling algorithm to check FSR state
-  Serial.println(running);
   while (!running) { // Keep polling until "running" is true
     fsrReading = analogRead(fsrAnalogPin);
     Serial.println(fsrReading);
     if (fsrReading >= threshold) {
-      //state = true;
+      state = true;
       running = true;
-      //motor_condition = true; 
+      motor_condition = true; 
       Serial.println("FSR pressed. Running = true");
     } else {
-      //state = false;
+      state = false;
       Serial.println("FSR not pressed. Polling...");
     }
 
@@ -91,10 +90,10 @@ void loop() {
     float voltage;
     voltage = analogRead(Hall_Sensor_Pin);
     //voltage = analogRead(Hall_Sensor_Pin);
-   // Serial.println(voltage);
+    //Serial.println(voltage);
     if (voltage>=3700)
     {
-     // Serial.println("Bait is gone!");
+     Serial.println("Bait is gone!");
     }
     
    // Serial.println(hall_voltage);
@@ -141,14 +140,14 @@ void loop() {
       digitalWrite(ledPin, HIGH); }  // turn LED on
     else { // no movement detected
       digitalWrite(ledPin, LOW);} // turn LED off
-    //Serial.print(distance);
-    //Serial.print('\t');
-    //Serial.println(pirVal); //something wrong with this line
+    Serial.print(distance);
+    Serial.print('\t');
+    Serial.println(pirVal); //something wrong with this line
 
     if (distance < 500) {
       if (pirVal == HIGH) {
         animal == HIGH;
-        Serial.println("Animal Detected!");
+       Serial.println("Animal Detected!");
         //WRITE ALGORITHM HERE!!!
       }
     }
@@ -156,4 +155,3 @@ void loop() {
     delay(50); // Simulate processing time
   }
 }
-
