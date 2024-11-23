@@ -4,6 +4,12 @@
 ////https://github.com/RobotsDinosaurs/Arduino/blob/main/PIR/PIR.ino
 //^source
 
+#include <WiFi.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_BMP280.h>
+#include <esp_http_client.h>
+
 #include <ESP32Servo.h>
 #include <Arduino.h>
 //potentiometer parameters:
@@ -17,6 +23,11 @@
 Servo servo1;
 Servo servo2;
 //#define motor2Pin 10
+
+const char* ssid = "OnePlus 9 5G";
+const char* password = "";
+const char* apiKey = "03OADTQYBRR6U8FE";  // Replace with your ThingSpeak Write API Key
+const char* server = "http://api.thingspeak.com/update";
 
 float x_est = 0.0;    // Initial estimate
 float P = 1.0;        // Initial estimate uncertainty
@@ -63,6 +74,47 @@ void setup() {
   digitalWrite(trig_pin, LOW);
   servo1.attach(motor1Pin);
   servo2.attach(motor2Pin);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  WiFi.begin(ssid);
+
+  while (WiFi.status() != WL_CONNECTED){
+  delay(500);
+  Serial.println("Connecting..");
+  }
+  Serial.println("Connected to WiFi.");
+  Serial.println("IP:");
+  Serial.println(WiFi.localIP());
+
+}
+
+//void sendDataToThingSpeak(Distance);
+void sendDataToThingSpeak(String distance) { //add parameter heres
+  esp_http_client_config_t config = {
+    .url = server,
+  };
+
+  esp_http_client_handle_t client = esp_http_client_init(&config);
+
+  // Prepare the URL
+  String url = String(server) + "?api_key=" + apiKey +
+               "&field1=" + distance;
+             
+  // Set URL
+  esp_http_client_set_url(client, url.c_str());
+
+  // Make the GET request
+  esp_err_t err = esp_http_client_perform(client);
+
+  if (err == ESP_OK) {
+    Serial.println("Data sent successfully to ThingSpeak");
+    Serial.printf("HTTP Status = %d\n", esp_http_client_get_status_code(client));
+  } else {
+    Serial.printf("HTTP GET request failed: %s\n", esp_err_to_name(err));
+  }
+
+  esp_http_client_cleanup(client);
 }
 
 void loop() {
@@ -134,7 +186,7 @@ void loop() {
     servo2.write(servoAngle); //I have one pot controlling two motors. THe two sensors move in unison, not independently.
 
     //Serial.println(x_est);
-    bool animal;
+    //bool animal;
     pirVal = digitalRead(pirPin);  // read current input value
     if (pirVal == HIGH) { // movement detected  
       digitalWrite(ledPin, HIGH); }  // turn LED on
@@ -146,11 +198,14 @@ void loop() {
 
     if (distance < 100) {
       if (pirVal == HIGH) {
-        animal == HIGH;
+        //animal == HIGH;
         Serial.println("Animal Detected!");
         //WRITE ALGORITHM HERE!!!
       }
     }
+
+    String Distance = String(distance);
+    sendDataToThingSpeak(Distance);
    
     delay(50); // Simulate processing time
   }
