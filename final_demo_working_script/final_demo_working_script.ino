@@ -93,7 +93,7 @@ void loop() {
     //Serial.println(voltage);
     if (voltage>=3700)
     {
-     Serial.println("Bait is gone!");
+      Serial.println("Bait is gone!");
     }
     
    // Serial.println(hall_voltage);
@@ -144,10 +144,10 @@ void loop() {
     Serial.print('\t');
     Serial.println(pirVal); //something wrong with this line
 
-    if (distance < 500) {
+    if (distance < 100) {
       if (pirVal == HIGH) {
         animal == HIGH;
-       Serial.println("Animal Detected!");
+        Serial.println("Animal Detected!");
         //WRITE ALGORITHM HERE!!!
       }
     }
