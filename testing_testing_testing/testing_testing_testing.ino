@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_BMP280.h>
+//#include <Adafruit_BMP280.h>
 #include <esp_http_client.h>
 
 #include <ESP32Servo.h>
@@ -90,7 +90,7 @@ void setup() {
 }
 
 //void sendDataToThingSpeak(Distance);
-void sendDataToThingSpeak(String distance) { //add parameter heres
+void sendDataToThingSpeak(float distance) { //add parameter heres
   esp_http_client_config_t config = {
     .url = server,
   };
@@ -99,7 +99,7 @@ void sendDataToThingSpeak(String distance) { //add parameter heres
 
   // Prepare the URL
   String url = String(server) + "?api_key=" + apiKey +
-               "&field1=" + distance;
+               "&field1=" + String(distance) + 
              
   // Set URL
   esp_http_client_set_url(client, url.c_str());
@@ -108,37 +108,17 @@ void sendDataToThingSpeak(String distance) { //add parameter heres
   esp_err_t err = esp_http_client_perform(client);
 
   if (err == ESP_OK) {
-   // Serial.println("Data sent successfully to ThingSpeak");
-   // Serial.printf("HTTP Status = %d\n", esp_http_client_get_status_code(client));
+    Serial.println("Data sent successfully to ThingSpeak");
+    Serial.printf("HTTP Status = %d\n", esp_http_client_get_status_code(client));
   } else {
-  //  Serial.printf("HTTP GET request failed: %s\n", esp_err_to_name(err));
+    Serial.printf("HTTP GET request failed: %s\n", esp_err_to_name(err));
   }
 
   esp_http_client_cleanup(client);
 }
 
 void loop() {
-  // Polling algorithm to check FSR state
-  while (!running) { // Keep polling until "running" is true
-    fsrReading = analogRead(fsrAnalogPin);
-    Serial.println(fsrReading);
-    if (fsrReading >= threshold) {
-      state = true;
-      running = true;
-      motor_condition = true; 
-      Serial.println("FSR pressed. Running = true");
-    } else {
-      state = false;
-      Serial.println("FSR not pressed. Polling...");
-    }
-
-    delay(500); // Short delay for stability
-  }
-
-  // Code that runs once "running" is true
-  if (running) {
-    //Serial.println("Running part of the code...");
-    
+  
     float voltage;
     voltage = analogRead(Hall_Sensor_Pin);
     //voltage = analogRead(Hall_Sensor_Pin);
@@ -167,7 +147,7 @@ void loop() {
   
 
     int pot_adcValue = (analogRead(potPin));
-   // Serial.println(pot_adcValue);
+    //Serial.println(pot_adcValue);
 
   //predict
     P = P + Q; //use this to calculate Kalman Gain
@@ -182,10 +162,6 @@ void loop() {
     //Serial.println(x_est);
     //Serial.println(servoAngle);
 
-    //Serial.print(pot_adcValue);
-    //Serial.print('\t');
-    Serial.println(x_est); //something wrong with this line
-
     servo1.write(servoAngle);
     servo2.write(servoAngle); //I have one pot controlling two motors. THe two sensors move in unison, not independently.
 
@@ -196,21 +172,20 @@ void loop() {
       digitalWrite(ledPin, HIGH); }  // turn LED on
     else { // no movement detected
       digitalWrite(ledPin, LOW);} // turn LED off
-    //Serial.print(distance);
-    //Serial.print('\t');
-    //Serial.println(pirVal); //something wrong with this line
+    Serial.print(distance);
+   // Serial.print('\t');
+   // Serial.println(pirVal); //something wrong with this line
 
     if (distance < 100) {
       if (pirVal == HIGH) {
         //animal == HIGH;
-       // Serial.println("Animal Detected!");
+        Serial.println("Animal Detected!");
         //WRITE ALGORITHM HERE!!!
       }
     }
 
     String Distance = String(distance);
-    sendDataToThingSpeak(Distance);
+    sendDataToThingSpeak(distance);
    
     delay(50); // Simulate processing time
   }
-}
